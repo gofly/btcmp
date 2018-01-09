@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>货币价格实时监控</title>
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="/static/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <style rel="stylesheet">
+            .icon-small{
+                height: 18px;
+                margin-right: 2px;
+            }
+            .btn-account {
+                color: #fff;
+                background-color: transparent;
+                border-color: none;
+            }
+            .attetion-list {
+                margin: 40px auto;
+	            font-size: 0.5rem;
+            }
+            .attetion-list thead th {
+                text-align: right;
+            }
+            .attetion-list thead th.pair {
+                text-align: left;
+            }
+            .attetion-list tbody td {
+                text-align: right;
+                padding: 0.5rem;
+            }
+            .attetion-list tbody td.updating {
+                animation: twinkling .5s 1 ease-out;
+                -webkit-animation: twinkling .5s 1 ease-out;
+            }
+            @-webkit-keyframes twinkling{	/*透明度由0到1*/
+                0%{
+                    background-color: #ffc107;
+                    opacity: 0;
+                }
+                100%{
+                    opacity: 1;
+                }
+            }
+            @-webkit-keyframes twinkling{	/*透明度由0到1*/
+                0%{
+                    background-color: #ffc107;
+                    opacity: 0;
+                }
+                100%{
+                    opacity: 1;
+                }
+            }
+            .attetion-list .PairName{
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-between">
+            <span class="navbar-brand">货币价格实时监控</span>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    {{range $type := .PairTypes}}
+                    <a class="nav-item nav-link{{if eq $type $.PairType}} active{{end}}" href="/compare/{{$type.ToLower}}">对{{$type}}价格</a>
+                    {{end}}
+                    <a class="nav-item nav-link{{with .Thresholds}} active{{end}}" href="/settings">设置</a>
+                </div>
+            </div>
+        </nav>
+        <div class="container attetion-list">
+            <audio src="/static/ogg/orange.ogg" preload data-flag="0" loop id="music-notify">
+                <div class="alert alert-danger" role="alert">
+                    浏览器不支持播放声音，将无法使用声音提示
+                </div>
+            </audio>
+            {{with .Error}}
+            <div class="alert alert-danger" role="alert">{{.Error}}</div>
+            {{end}}
+            <h5>对{{$.PairType}}价格列表</h5>
+            <table class="table table-striped">
+                <thead class="thead-default">
+                    <tr>
+                        <th class="pair">币种</th>
+                        <th>Bittrex</th>
+                        <th>Huobi</th>
+                        <th>Binance</th>
+                        <th>Gateio</th>
+                        <th>Okex</th>
+                    </tr>
+                </thead>
+                <tbody id="price-list">
+                    <tr>
+                        <td colspan="6">暂无数据</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <script src="/static/js/jquery-3.2.1.min.js" integrity="sha384-xBuQ/xzmlsLoJpyjoggmTEz8OWUFM0/RC5BsqQBDX2v5cMvDHcMakNTNrHIW2I5f" crossorigin="anonymous"></script>
+        <script src="/static/js/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+        <script src="/static/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+        <script src="/static/js/btcmp.js" crossorigin="anonymous"></script>
+        <script type="text/template" id="price-list-item">
+            <tr>
+                <td class="PairName"></td>
+                <td class="Bittrex"></td>
+                <td class="Huobi"></td>
+                <td class="Binance"></td>
+                <td class="Gateio"></td>
+                <td class="Okex"></td>
+            </tr>
+        </script>
+        <script type="text/javascript">
+            $(function(){
+                var trigger = true,
+                    $musicNotify = $('#music-notify');
+                $('body').on('click', function(){
+                    if(trigger && $musicNotify.data('flag') === 0){
+                        $musicNotify[0].play();
+                        setTimeout(function(){
+                            $musicNotify[0].pause();
+                        },10)
+                        trigger = false;
+                    }
+                });
+                var btcmp = new BtCmp({
+                    wsHost: 'ws://{{.WsDataHost}}',
+                    pairType: '{{.PairType}}',
+                    priceListEl: $('#price-list'),
+                    tplStr: $('#price-list-item').html(),
+                    notifyEl: $musicNotify
+                });
+                btcmp.LoadPriceData();
+            });
+        </script>
+    </body>
+</html>

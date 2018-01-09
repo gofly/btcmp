@@ -1,0 +1,9 @@
+vendor
+crawler/binance/binance
+crawler/bittrex/bittrex
+crawler/gateio/gateio
+crawler/huobi/huobi
+crawler/okex/okex
+receiver/receiver
+web/web
+*.gz
