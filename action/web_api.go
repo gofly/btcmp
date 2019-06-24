@@ -101,12 +101,19 @@ func (a *WebAction) ApiGetPairsRewrite(w http.ResponseWriter, r *http.Request) {
 }
 func (a *WebAction) ApiSaveSettings(w http.ResponseWriter, r *http.Request) {
 	settings := &entity.Settings{}
-	json.NewDecoder(r.Body).Decode(&settings)
-	err := a.cmpSrv.SaveUserSettings(userName, settings)
+	err := json.NewDecoder(r.Body).Decode(&settings)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "SaveUesrSettings(%s, %v) error: %s", userName, settings.Thresholds, err)
-		log.Printf("[ERROR] SaveUesrSettings(%s, %v) error: %s", userName, settings.Thresholds, err)
+		fmt.Fprintf(w, "[ERROR] decode user(%s)'s settings error: %s", userName, err)
+		log.Printf("[ERROR] decode user(%s)'s settings error: %s", userName, err)
+		return
+	}
+	log.Printf("[INFO] user(%s)'s settings: %+v", settings)
+	err = a.cmpSrv.SaveUserSettings(userName, settings)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "SaveUesrSettings(%s, %v) error: %s", userName, settings, err)
+		log.Printf("[ERROR] SaveUesrSettings(%s, %v) error: %s", userName, settings, err)
 		return
 	}
 	err = a.redisCli.Publish(boardcastSettingsUpdateKey(userName), nil).Err()
